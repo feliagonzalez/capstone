@@ -1,0 +1,36 @@
+{% extends "core/base.html" %}
+
+{% block title %}Registrarse{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="card-title text-center mb-4">Crear una Cuenta</h2>
+                <form method="post">
+                    {% csrf_token %}
+
+                    {# Esto mostrará errores generales del formulario (ej: usuario ya existe) #}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {# {{ form.as_p }} renderizará automáticamente todos los campos: #}
+                    {# usuario, nombre, apellido, email y contraseñas. #}
+                    {{ form.as_p }}
+
+                    <button type="submit" class="btn btn-primary w-100 mt-3">Registrarse</button>
+                </form>
+                <p class="text-center mt-3">
+                    ¿Ya tienes una cuenta? <a href="{% url 'login' %}">Inicia sesión</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "core/base.html" %}
+
+{% block title %}Crear Nuevo Pozo{% endblock %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 600px;">
+    <div class="card shadow-sm">
+        <div class="card-body p-4">
+            <h2 class="card-title text-center mb-1">Registrar un Nuevo Pozo</h2>
+            <p class="card-subtitle text-center mb-4 text-muted">Completa la información para añadir un nuevo pozo a tu dashboard.</p>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="{{ form.nombre.id_for_label }}" class="form-label fw-bold">Nombre:</label>
+                    {{ form.nombre }}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.ubicacion.id_for_label }}" class="form-label fw-bold">Ubicación:</label>
+                    {{ form.ubicacion }}
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.latitud.id_for_label }}" class="form-label fw-bold">Latitud:</label>
+                        {{ form.latitud }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.longitud.id_for_label }}" class="form-label fw-bold">Longitud:</label>
+                        {{ form.longitud }}
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <a href="{% url 'dashboard' %}" class="btn btn-secondary me-md-2">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Guardar Pozo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

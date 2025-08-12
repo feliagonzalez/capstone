@@ -1,0 +1,59 @@
+{% extends "core/base.html" %}
+
+{% block title %}Reportes{% endblock %}
+
+{% block content %}
+<h1 class="h2">Generación de Reportes</h1>
+
+<form method="get" class="card p-3 mb-4">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label for="pozo" class="form-label">Pozo</label>
+            <select name="pozo" id="pozo" class="form-select">
+                <option value="">Todos</option>
+                {% for p in pozos %}
+                <option value="{{ p.id }}" {% if request.GET.pozo == p.id|stringformat:"s" %}selected{% endif %}>{{ p.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
+            <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control" value="{{ request.GET.fecha_inicio }}">
+        </div>
+        <div class="col-md-3">
+            <label for="fecha_fin" class="form-label">Fecha Fin</label>
+            <input type="date" name="fecha_fin" id="fecha_fin" class="form-control" value="{{ request.GET.fecha_fin }}">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+        </div>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <thead class="table-light">
+            <tr>
+                <th>Pozo</th>
+                <th>Fecha y Hora</th>
+                <th>Nivel de Agua (m)</th>
+                <th>Estado del Sensor</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for medicion in mediciones %}
+            <tr>
+                <td>{{ medicion.pozo.nombre }}</td>
+                <td>{{ medicion.fecha_hora|date:"Y-m-d H:i" }}</td>
+                <td>{{ medicion.nivel_agua }}</td>
+                <td>{{ medicion.estado_sensor }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center">No hay datos que coincidan con los filtros.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

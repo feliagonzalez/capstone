@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ejemplo de Mapa de Pozo</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-eYcLKWIhhgMbahc0bqIgpG0YOykHF6+iFdiSTrzlnQM="
+     crossorigin=""/>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
+    <style>
+        /* Estilo para el contenedor del mapa */
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Ubicación del Pozo</h1>
+    <div id="map"></div>
+
+    <script>
+        // 1. Coordenadas del pozo (ejemplo: Talagante, Chile)
+        const latitudPozo = -33.5333;
+        const longitudPozo = -71.1333;
+
+        // 2. Inicializar el mapa centrado en las coordenadas del pozo
+        // El segundo argumento es el nivel de zoom (más alto = más cerca)
+        var map = L.map('map').setView([latitudPozo, longitudPozo], 15);
+
+        // 3. Añadir una capa de mapa base (OpenStreetMap es gratis)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // 4. Añadir un marcador en la ubicación del pozo
+        L.marker([latitudPozo, longitudPozo]).addTo(map)
+            .bindPopup('<b>Pozo de Ejemplo</b><br>Ubicación: Talagante.')
+            .openPopup(); // Abre el popup automáticamente
+    </script>
+
+</body>
+</html>
