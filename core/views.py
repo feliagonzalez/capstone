@@ -21,6 +21,9 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import AuthenticationForm
 from .forms import CustomUserCreationForm
 
+import random
+from decimal import Decimal
+
 #===============================================================
 # VISTAS DE PÁGINAS Y AUTENTICACIÓN
 #===============================================================
@@ -145,12 +148,49 @@ def crear_pozo_view(request):
 def get_pozo_data(request, pozo_id):
     try:
         pozo = Pozo.objects.get(id=pozo_id, propietario=request.user)
-        mediciones = pozo.mediciones.order_by('fecha_hora').all()[:50]
+
+        # --- INICIO DE LA SIMULACIÓN AUTOMÁTICA ---
+        
+        # 1. Obtener la última medición para usarla como base
+        ultima_medicion = Medicion.objects.filter(pozo=pozo).order_by('-fecha_hora').first()
+        
+        base_nivel = Decimal('20.0') # Nivel por defecto si el pozo es nuevo
+        if ultima_medicion:
+            base_nivel = ultima_medicion.nivel_agua
+
+        # 2. Generar una pequeña variación aleatoria para el nivel del agua
+        fluctuacion = Decimal(random.uniform(-0.5, 0.4))
+        nuevo_nivel = base_nivel + fluctuacion
+        
+        # 3. Asegurarse de que el nivel se mantenga en un rango lógico
+        if nuevo_nivel < 3: nuevo_nivel = Decimal('3.0')
+        if nuevo_nivel > 25: nuevo_nivel = Decimal('25.0')
+
+        # 4. Determinar el estado del sensor según el nuevo nivel
+        nuevo_estado = 'Operativo'
+        if nuevo_nivel < 7:
+            nuevo_estado = 'Crítico'
+        elif nuevo_nivel < 15:
+            nuevo_estado = 'Alerta'
+
+        # 5. Crear y guardar la nueva medición simulada en la base de datos
+        Medicion.objects.create(
+            pozo=pozo,
+            nivel_agua=nuevo_nivel,
+            estado_sensor=nuevo_estado
+        )
+        # --- FIN DE LA SIMULACIÓN ---
+
+        # Obtener las últimas 50 mediciones para enviar al frontend
+        mediciones = pozo.mediciones.order_by('fecha_hora').all().reverse()[:50]
+        
         data = {
-            'labels': [m.fecha_hora.strftime('%H:%M') for m in mediciones],
+            'labels': [m.fecha_hora.strftime('%H:%M:%S') for m in mediciones],
             'niveles': [m.nivel_agua for m in mediciones],
+            'estados': [m.estado_sensor for m in mediciones] # Se envían los estados
         }
         return JsonResponse(data)
+        
     except Pozo.DoesNotExist:
         return JsonResponse({'error': 'Pozo no encontrado'}, status=404)
 

@@ -134,3 +134,12 @@ LOGIN_REDIRECT_URL = 'menu'
 
 # URL a la que se redirigirá si intenta acceder a una página protegida sin estar logueado.
 LOGIN_URL = 'login' 
+
+import os
+
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'core/static'),
+]

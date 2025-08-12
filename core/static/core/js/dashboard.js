@@ -1,4 +1,5 @@
 // core/static/core/js/dashboard.js
+
 document.addEventListener('DOMContentLoaded', function () {
     const pozoSelector = document.getElementById('pozoSelector');
     
@@ -17,43 +18,28 @@ document.addEventListener('DOMContentLoaded', function () {
     
     // --- Estado Global ---
     let chart;
-    let map; // MAPA: Variable para el objeto de mapa Leaflet
-    let currentMarker; // MAPA: Variable para el marcador actual
+    let map;
+    let currentMarker;
 
     // --- Funciones ---
 
-    // MAPA: Función para inicializar el mapa
     function inicializarMapa() {
-        // Coordenadas iniciales (ej: centro de Santiago, Chile)
         map = L.map('mapContainer').setView([-33.45, -70.65], 12); 
-        
-        // Usamos el mapa de CartoDB, que es neutral y de alta calidad
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(map);
     }
 
-    // MAPA: Función para actualizar el marcador y la vista del mapa
     function actualizarMapa(lat, lon, nombrePozo) {
-        // Si las coordenadas no son válidas (0 o nulas), no muestra el marcador.
         if (!lat || !lon) {
-            if (currentMarker) {
-                map.removeLayer(currentMarker);
-            }
-            // Centra el mapa en una vista general si no hay coordenadas
+            if (currentMarker) map.removeLayer(currentMarker);
             map.setView([-33.45, -70.65], 12);
             return;
         }
-
         const newLatLng = new L.LatLng(lat, lon);
-        map.setView(newLatLng, 15); // Centra el mapa en el pozo con zoom
-
-        // Elimina el marcador anterior si existe
-        if (currentMarker) {
-            map.removeLayer(currentMarker);
-        }
-
-        // Añade un nuevo marcador
+        map.setView(newLatLng, 15);
+        if (currentMarker) map.removeLayer(currentMarker);
         currentMarker = L.marker(newLatLng).addTo(map)
             .bindPopup(`<b>${nombrePozo}</b>`)
             .openPopup();
@@ -62,9 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
     async function fetchData(pozoId) {
         try {
             const response = await fetch(`/api/data/pozo/${pozoId}/`);
-            if (!response.ok) {
-                throw new Error('Error al obtener los datos del pozo');
-            }
+            if (!response.ok) throw new Error('Error al obtener los datos del pozo');
             return await response.json();
         } catch (error) {
             console.error(error);
@@ -73,16 +57,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function renderChart(data) {
-        if (chart) {
-            chart.destroy();
-        }
+        if (chart) chart.destroy();
         chart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: data.labels,
+                labels: data.labels.reverse(), // Invertimos para orden cronológico
                 datasets: [{
                     label: 'Nivel de Agua (m)',
-                    data: data.niveles,
+                    data: data.niveles.reverse(), // Invertimos para orden cronológico
                     borderColor: '#0d6efd',
                     backgroundColor: 'rgba(13, 110, 253, 0.1)',
                     tension: 0.1,
@@ -102,45 +84,74 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+    
+    // --- LÓGICA DE ALERTAS (AHORA DENTRO DEL BLOQUE PRINCIPAL) ---
+    async function checkAlerts() {
+        try {
+            const response = await fetch('/api/data/alertas/');
+            const data = await response.json();
+            const container = document.getElementById('alertas-container');
+            container.innerHTML = ''; 
+
+            if (data.alertas && data.alertas.length > 0) {
+                const alerta = data.alertas[0];
+                const fecha = new Date(alerta.fecha_hora).toLocaleString('es-CL');
+                
+                const alertaDiv = document.createElement('div');
+                alertaDiv.className = 'alert alert-danger';
+                alertaDiv.setAttribute('role', 'alert');
+                alertaDiv.innerHTML = `
+                    <h4 class="alert-heading">¡Alerta Crítica!</h4>
+                    <p>${alerta.descripcion}</p>
+                    <hr>
+                    <p class="mb-0"><small>Fecha: ${fecha}</small></p>
+                `;
+                container.appendChild(alertaDiv);
+            }
+        } catch (error) {
+            console.error('Error al verificar alertas:', error);
+        }
+    }
 
     async function updateDashboard(pozoId) {
         if (!pozoId) return;
         
-        // Obtiene la opción seleccionada para acceder a sus datos
         const selectedOption = pozoSelector.options[pozoSelector.selectedIndex];
         const nombreCompleto = selectedOption.text;
-        const nombrePozo = nombreCompleto.split(' - ')[0]; // Extrae solo el nombre
-        const ubicacionPozo = nombreCompleto.split(' - ')[1]; // Extrae la ubicación
+        const nombrePozo = nombreCompleto.split(' - ')[0];
+        const ubicacionPozo = nombreCompleto.split(' - ')[1];
 
-        // Actualizar la información del pozo en la tarjeta de la izquierda
         pozoTitulo.textContent = `Nivel de Agua: ${nombrePozo}`;
         infoPozoNombre.textContent = nombrePozo;
         infoPozoUbicacion.textContent = `Ubicación: ${ubicacionPozo || ''}`;
 
-        // MAPA: Extraer latitud y longitud y actualizar el mapa
         const lat = parseFloat(selectedOption.getAttribute('data-latitud'));
         const lon = parseFloat(selectedOption.getAttribute('data-longitud'));
         actualizarMapa(lat, lon, nombrePozo);
-
-        console.log(`Leyendo coordenadas -> Latitud: ${lat}, Longitud: ${lon}`);
-
-        // Obtener y renderizar datos de mediciones y gráfico
+        
         const data = await fetchData(pozoId);
         if (!data) return;
 
         renderChart(data);
 
-        // Limpiar y rellenar la tabla de mediciones
         tablaMedicionesBody.innerHTML = '';
-        if (data.labels.length === 0) {
+        if (!data.labels || data.labels.length === 0) {
             tablaMedicionesBody.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-3">No hay mediciones para este pozo.</td></tr>`;
         } else {
-            for (let i = data.labels.length - 1; i >= 0; i--) {
+            // Recorremos los datos en el orden que llegan (más reciente primero)
+            for (let i = 0; i < data.labels.length; i++) {
+                const estado = data.estados[i];
+                let estadoBadgeClass = 'bg-secondary';
+
+                if (estado === 'Operativo') estadoBadgeClass = 'bg-success';
+                else if (estado === 'Alerta') estadoBadgeClass = 'bg-warning text-dark';
+                else if (estado === 'Crítico') estadoBadgeClass = 'bg-danger';
+
                 const row = `
                     <tr>
                         <td>${data.labels[i]}</td>
-                        <td>${data.niveles[i]}</td>
-                        <td>Operativo</td>
+                        <td>${data.niveles[i].toFixed(2)}</td>
+                        <td><span class="badge ${estadoBadgeClass}">${estado}</span></td>
                     </tr>
                 `;
                 tablaMedicionesBody.innerHTML += row;
@@ -148,34 +159,24 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- LÓGICA DE INICIALIZACIÓN ---
-
-    // MAPA: Inicializa el mapa al cargar la página
+    // --- LÓGICA DE INICIALIZACIÓN (ÚNICA Y CORRECTA) ---
     inicializarMapa(); 
 
-    // Event listener para cuando el usuario cambia de pozo
     pozoSelector.addEventListener('change', (e) => {
         updateDashboard(e.target.value);
     });
 
-    // Cargar datos del primer pozo seleccionado al iniciar
     if (pozoSelector.value) {
         updateDashboard(pozoSelector.value);
     }
     
-    // Opcional: Descomenta la sección de alertas si la vas a usar
-    /*
-    async function checkAlerts() {
-        // ... tu lógica de alertas aquí ...
-    }
-    checkAlerts();
-    setInterval(checkAlerts, 15000);
-    */
-   
-    // Actualizar datos periódicamente
+    checkAlerts(); // Primera revisión de alertas al cargar
+    
+    // Actualizar datos y alertas periódicamente
     setInterval(() => {
         if (pozoSelector.value) {
             updateDashboard(pozoSelector.value);
         }
-    }, 30000); // Actualizar cada 30 segundos
+        checkAlerts();
+    }, 120000); // Actualizar cada 2 minutos
 });

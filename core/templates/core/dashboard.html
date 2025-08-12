@@ -1,6 +1,6 @@
 {% extends "core/base.html" %}
 {% load static %}
-
+{% load l10n %}
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
@@ -9,16 +9,19 @@
         <h1 class="h2">Dashboard de Pozos</h1>
     </div>
 
+    <div id="alertas-container" class="mb-4"></div>
+
     {% if pozos %}
         <div class="row">
             <div class="col-md-4">
                 <div class="mb-3">
                     <label for="pozoSelector" class="form-label fw-bold">Seleccionar Pozo:</label>
                     <select class="form-select form-select-lg" id="pozoSelector">
+                        {% localize off %}
                         {% for pozo in pozos %}
-                            {# Asumimos que tu objeto 'pozo' puede tener latitud y longitud #}
                             <option value="{{ pozo.id }}" data-latitud="{{ pozo.latitud|default_if_none:'0' }}" data-longitud="{{ pozo.longitud|default_if_none:'0' }}">{{ pozo.nombre }} - {{ pozo.ubicacion }}</option>
                         {% endfor %}
+                        {% endlocalize %}
                     </select>
                 </div>
                 <div id="infoPozo" class="card mb-3">
@@ -78,18 +81,10 @@
 
 {% block scripts %}
 {% if pozos %}
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-eYcLKWIhhgMbahc0bqIgpG0YOykHF6+iFdiSTrzlnQM=" crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
-
-    {# ---- Carga los scripts de Leaflet para el mapa ---- #}
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-    {# ---- Carga Chart.js desde un CDN (si no lo tienes en base.html) ---- #}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    {# ---- AÑADE ESTA LÍNEA PARA CARGAR TU SCRIPT ---- #}
     <script src="{% static 'core/js/dashboard.js' %}"></script>
 
 {% endif %}
