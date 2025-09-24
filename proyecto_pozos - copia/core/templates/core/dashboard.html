@@ -1,0 +1,91 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% load l10n %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Dashboard de Pozos</h1>
+    </div>
+
+    <div id="alertas-container" class="mb-4"></div>
+
+    {% if pozos %}
+        <div class="row">
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label for="pozoSelector" class="form-label fw-bold">Seleccionar Pozo:</label>
+                    <select class="form-select form-select-lg" id="pozoSelector">
+                        {% localize off %}
+                        {% for pozo in pozos %}
+                            <option value="{{ pozo.id }}" data-latitud="{{ pozo.latitud|default_if_none:'0' }}" data-longitud="{{ pozo.longitud|default_if_none:'0' }}">{{ pozo.nombre }} - {{ pozo.ubicacion }}</option>
+                        {% endfor %}
+                        {% endlocalize %}
+                    </select>
+                </div>
+                <div id="infoPozo" class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title" id="pozo-seleccionado-nombre"></h5>
+                        <p class="card-text" id="pozo-seleccionado-ubicacion"></p>
+                        <p class="card-text"><small class="text-muted" id="pozo-seleccionado-id"></small></p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header fw-bold">
+                        Ubicación en el Mapa
+                    </div>
+                    <div id="mapContainer" style="height: 250px;"></div>
+                </div>
+
+            </div>
+            <div class="col-md-8">
+                <h2 id="pozo-seleccionado-titulo" class="h4 mb-3">Nivel de Agua</h2>
+                <div style="height: 300px;">
+                    <canvas id="nivelAguaChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="mt-5">Últimas Mediciones</h3>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Fecha y Hora</th>
+                        <th>Nivel de Agua (m)</th>
+                        <th>Estado del Sensor</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaMediciones">
+                    
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">¡Bienvenido, {{ user.username }}!</h5>
+                <p class="card-text">Parece que aún no tienes ningún pozo registrado en el sistema.</p>
+                <a href="{% url 'crear_pozo' %}" class="btn btn-primary">Crea tu primer pozo ahora</a>
+            </div>
+        </div>
+    {% endif %}
+    
+    <footer class="text-center mt-5 text-muted">
+        <p>ID de sesión (Firebase): <span id="userId" class="font-monospace"></span></p>
+    </footer>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+{% if pozos %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="{% static 'core/js/dashboard.js' %}"></script>
+
+{% endif %}
+{% endblock scripts %}

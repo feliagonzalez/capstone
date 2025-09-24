@@ -1,0 +1,72 @@
+{% extends "core/base.html" %}
+
+{% block title %}Menú Principal{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilos para hacer las tarjetas más interactivas */
+    .card-menu {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .card-menu:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .card-menu .card-icon {
+        font-size: 3rem;
+        color: var(--bs-primary);
+    }
+</style>
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-5">Bienvenid@, {{ user.username }}</h1>
+        <p class="lead text-muted">Selecciona una opción para comenzar</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 text-center p-4 card-menu">
+                <div class="card-body">
+                    <div class="card-icon mb-3">
+                        <i class="bi bi-speedometer2"></i> </div>
+                    <h5 class="card-title">Dashboard de Pozos</h5>
+                    <p class="card-text">Visualiza en tiempo real el estado y nivel de agua de tus pozos.</p>
+                    <a href="{% url 'dashboard' %}" class="stretched-link"></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 text-center p-4 card-menu">
+                <div class="card-body">
+                    <div class="card-icon mb-3">
+                        <i class="bi bi-file-earmark-text"></i> </div>
+                    <h5 class="card-title">Generar Reportes</h5>
+                    <p class="card-text">Consulta el historial de mediciones y genera reportes detallados.</p>
+                    <a href="{% url 'reportes' %}" class="stretched-link"></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 text-center p-4 card-menu">
+                <div class="card-body">
+                    <div class="card-icon mb-3">
+                        <i class="bi bi-plus-circle"></i> </div>
+                    <h5 class="card-title">Añadir Nuevo Pozo</h5>
+                    <p class="card-text">Registra un nuevo pozo en el sistema de monitoreo.</p>
+                    <a href="{% url 'crear_pozo' %}" class="stretched-link"></a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 mt-5 text-center">
+             <a href="{% url 'logout' %}" class="btn btn-outline-danger">Cerrar Sesión</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}
